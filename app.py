@@ -58,7 +58,7 @@ def obter_dados(link):
 
 
 # ==============================
-# LISTA DE STICKERS (reduzida)
+# LISTA DE STICKERS
 # ==============================
 
 stickers = {
@@ -163,47 +163,17 @@ stickers = {
 
 }
 
-# ==============================
-# INICIALIZAR ESTADO
-# ==============================
-if "selecionados" not in st.session_state:
-    st.session_state.selecionados = []
 
 # ==============================
-# BOTÕES
+# SELEÇÃO DE STICKERS
 # ==============================
-col1, col2, col3 = st.columns(3)
 
-novo_estado = None
-
-with col1:
-    if st.button("Selecionar todos Holo"):
-        novo_estado = [s for s in stickers if "holo" in s.lower()]
-
-with col2:
-    if st.button("Selecionar todos Gold"):
-        novo_estado = [s for s in stickers if "gold" in s.lower()]
-
-with col3:
-    if st.button("Limpar seleção"):
-        novo_estado = []
-
-# atualiza estado apenas uma vez
-if novo_estado is not None:
-    st.session_state.selecionados = novo_estado
-    st.rerun()
-
-# ==============================
-# MULTISELECT
-# ==============================
 selecionados = st.multiselect(
     "Escolha os stickers",
     options=list(stickers.keys()),
-    default=st.session_state.selecionados,
     max_selections=34
 )
 
-st.session_state.selecionados = selecionados
 
 # ==============================
 # MOSTRAR IMAGENS
