@@ -174,14 +174,15 @@ selecionados = []
 
 cols = st.columns(4)
 
-for i, item in enumerate(stickers):
+stickers_ordenados = sorted(stickers.keys())
+
+for i, item in enumerate(stickers_ordenados):
 
     with cols[i % 4]:
 
         if st.checkbox(item):
 
             selecionados.append(item)
-
 
 # ==============================
 # MOSTRAR IMAGENS
