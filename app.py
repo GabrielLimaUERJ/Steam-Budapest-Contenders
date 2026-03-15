@@ -12,7 +12,7 @@ st.title("CS2 Sticker Analyzer — Budapest 2025")
 
 
 # ==============================
-# BOTÃO PARA ATUALIZAR CACHE
+# BOTÃO ATUALIZAR DADOS
 # ==============================
 
 if st.button("🔄 Atualizar dados"):
@@ -45,7 +45,7 @@ def limpar_preco(preco):
 
 
 # ==============================
-# CACHE (REDUZIDO)
+# CACHE
 # ==============================
 
 @st.cache_data(ttl=120)
@@ -71,7 +71,7 @@ def obter_dados(link):
 
 
 # ==============================
-# STICKERS
+# LISTA DE STICKERS (EXEMPLO)
 # ==============================
 
 stickers = {
@@ -185,50 +185,7 @@ stickers_ordenados = sorted(stickers.keys())
 
 
 # ==============================
-# ESTADO DAS CHECKBOX
-# ==============================
-
-for item in stickers_ordenados:
-
-    chave = f"chk_{item}"
-
-    if chave not in st.session_state:
-        st.session_state[chave] = False
-
-
-# ==============================
-# BOTÕES DE SELEÇÃO
-# ==============================
-
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    if st.button("Selecionar TODOS"):
-        for item in stickers_ordenados:
-            st.session_state[f"chk_{item}"] = True
-        st.rerun()
-
-with col2:
-    if st.button("Limpar seleção"):
-        for item in stickers_ordenados:
-            st.session_state[f"chk_{item}"] = False
-        st.rerun()
-
-with col3:
-    if st.button("Selecionar HOLO"):
-        for item in stickers_ordenados:
-            st.session_state[f"chk_{item}"] = "holo" in item.lower()
-        st.rerun()
-
-with col4:
-    if st.button("Selecionar GOLD"):
-        for item in stickers_ordenados:
-            st.session_state[f"chk_{item}"] = "gold" in item.lower()
-        st.rerun()
-
-
-# ==============================
-# GRID DE CHECKBOX
+# CHECKBOX GRID
 # ==============================
 
 st.subheader("Escolha os stickers")
@@ -239,11 +196,9 @@ selecionados = []
 
 for i, item in enumerate(stickers_ordenados):
 
-    chave = f"chk_{item}"
-
     with cols[i % 4]:
 
-        if st.checkbox(item, key=chave):
+        if st.checkbox(item):
 
             selecionados.append(item)
 
@@ -283,7 +238,7 @@ for item in selecionados:
 
     resultado = obter_dados(stickers[item]["link"])
 
-    time.sleep(0.25)   # evita limite de requisições
+    time.sleep(0.25)
 
     if resultado:
 
