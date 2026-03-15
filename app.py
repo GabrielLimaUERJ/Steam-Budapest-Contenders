@@ -1,42 +1,64 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import re
+
 from steam_market_api import pegar_preco
 
 st.set_page_config(page_title="CS2 Sticker Analyzer", layout="wide")
 
 st.title("CS2 Sticker Analyzer — Budapest 2025")
 
+
 # ==============================
-# CACHE DE PREÇO (ANTI BLOQUEIO)
+# LIMPAR PREÇO
+# ==============================
+
+def limpar_preco(preco):
+
+    if preco is None:
+        return None
+
+    preco = (
+        preco.replace("$", "")
+        .replace("€", "")
+        .replace("R$", "")
+        .replace(",", ".")
+    )
+
+    numeros = re.findall(r"\d+\.?\d*", preco)
+
+    if numeros:
+        return float(numeros[0])
+
+    return None
+
+
+# ==============================
+# CACHE
 # ==============================
 
 @st.cache_data(ttl=600)
-def obter_preco(link):
+def obter_dados(link):
 
-    try:
+    dados = pegar_preco(link)
 
-        dados = pegar_preco(link)
-
-        if not dados:
-            return None
-
-        preco = dados["lowest_price"]
-
-        preco = (
-            preco.replace("$", "")
-            .replace("€", "")
-            .replace(",", ".")
-        )
-
-        return float(preco)
-
-    except:
+    if not dados:
         return None
+
+    preco_atual = limpar_preco(dados["lowest_price"])
+    preco_mediano = limpar_preco(dados["median_price"])
+
+    if preco_atual is None or preco_mediano is None:
+        return None
+
+    variacao = ((preco_atual - preco_mediano) / preco_mediano) * 100
+
+    return preco_atual, preco_mediano, variacao
 
 
 # ==============================
-# DICIONÁRIO DE STICKERS
+# LISTA DE STICKERS (reduzida)
 # ==============================
 
 stickers = {
@@ -53,7 +75,7 @@ stickers = {
 
 "Sticker | FaZe Clan (Gold) | Budapest 2025":{
 "link":"https://steamcommunity.com/market/listings/730/Sticker%20%7C%20FaZe%20Clan%20%28Gold%29%20%7C%20Budapest%202025",
-"img":"https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMi0MSnHtwM68obu72bgThH10MbkpCYKvqr2OPM9dfHED2bIw7gm5bZtHn61zB9ysmiBn4z8dy_EOg8-SswnGkq6UaI/330x192?allow_animated=1"
+"img":"https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMi0MSnHtwM68obu72bgThH10MbkpCYKvqr2OPM9dfHED2bIw7gm5bdoTXrjl0twtT-AnNerInKVZgI-SswnU7w2rh4/330x192?allow_animated=1"
 },
 
 "Sticker | FaZe Clan (Holo) | Budapest 2025":{
@@ -142,14 +164,46 @@ stickers = {
 }
 
 # ==============================
-# SELEÇÃO DE STICKERS
+# INICIALIZAR ESTADO
 # ==============================
+if "selecionados" not in st.session_state:
+    st.session_state.selecionados = []
 
+# ==============================
+# BOTÕES
+# ==============================
+col1, col2, col3 = st.columns(3)
+
+novo_estado = None
+
+with col1:
+    if st.button("Selecionar todos Holo"):
+        novo_estado = [s for s in stickers if "holo" in s.lower()]
+
+with col2:
+    if st.button("Selecionar todos Gold"):
+        novo_estado = [s for s in stickers if "gold" in s.lower()]
+
+with col3:
+    if st.button("Limpar seleção"):
+        novo_estado = []
+
+# atualiza estado apenas uma vez
+if novo_estado is not None:
+    st.session_state.selecionados = novo_estado
+    st.rerun()
+
+# ==============================
+# MULTISELECT
+# ==============================
 selecionados = st.multiselect(
-"Escolha até 16 stickers",
-options=list(stickers.keys()),
-max_selections=16
+    "Escolha os stickers",
+    options=list(stickers.keys()),
+    default=st.session_state.selecionados,
+    max_selections=34
 )
+
+st.session_state.selecionados = selecionados
 
 # ==============================
 # MOSTRAR IMAGENS
@@ -165,52 +219,63 @@ if selecionados:
 
         with cols[i % 4]:
 
-            st.image(stickers[item]["img"], width=150)
+            st.markdown(
+                f"""
+                <a href="{stickers[item]['link']}" target="_blank">
+                    <img src="{stickers[item]['img']}" width="150">
+                </a>
+                <p style="font-size:12px">{item}</p>
+                """,
+                unsafe_allow_html=True
+            )
 
-            st.caption(item)
 
 # ==============================
-# BUSCAR PREÇOS
+# BUSCAR DADOS
 # ==============================
 
 dados = []
 
 for item in selecionados:
 
-    preco = obter_preco(stickers[item]["link"])
+    resultado = obter_dados(stickers[item]["link"])
 
-    dados.append({
-        "Item": item,
-        "Preço USD": preco,
-        "Link Steam": stickers[item]["link"]
-    })
+    if resultado:
+
+        preco_atual, preco_mediano, variacao = resultado
+
+        dados.append({
+            "Item": item,
+            "Preço Atual": preco_atual,
+            "Preço Mediano 24h": preco_mediano,
+            "Variação %": round(variacao,2)
+        })
+
 
 # ==============================
-# TABELA
+# TABELA + GRÁFICO
 # ==============================
 
 if dados:
 
     df = pd.DataFrame(dados)
 
-    st.subheader("Tabela de preços")
+    st.subheader("Tabela de análise")
 
     st.dataframe(df)
 
-    df = df.dropna()
+    st.subheader("Variação percentual")
 
-# ==============================
-# GRÁFICO
-# ==============================
+    fig, ax = plt.subplots()
 
-    if not df.empty:
+    cores = ["green" if x > 0 else "red" for x in df["Variação %"]]
 
-        st.subheader("Comparação de preços")
+    ax.bar(df["Item"], df["Variação %"], color=cores)
 
-        fig, ax = plt.subplots()
+    ax.axhline(0)
 
-        ax.bar(df["Item"], df["Preço USD"])
+    ax.set_ylabel("Variação (%)")
 
-        plt.xticks(rotation=90)
+    plt.xticks(rotation=90)
 
-        st.pyplot(fig)
+    st.pyplot(fig)
