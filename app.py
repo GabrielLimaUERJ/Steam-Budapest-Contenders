@@ -2,12 +2,22 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import re
+import time
 
 from steam_market_api import pegar_preco
 
 st.set_page_config(page_title="CS2 Sticker Analyzer", layout="wide")
 
 st.title("CS2 Sticker Analyzer — Budapest 2025")
+
+
+# ==============================
+# BOTÃO PARA ATUALIZAR CACHE
+# ==============================
+
+if st.button("🔄 Atualizar dados"):
+    st.cache_data.clear()
+    st.rerun()
 
 
 # ==============================
@@ -35,10 +45,10 @@ def limpar_preco(preco):
 
 
 # ==============================
-# CACHE
+# CACHE (REDUZIDO)
 # ==============================
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=120)
 def obter_dados(link):
 
     dados = pegar_preco(link)
@@ -59,6 +69,10 @@ def obter_dados(link):
 
     return preco_atual, preco_mediano, variacao
 
+
+# ==============================
+# STICKERS
+# ==============================
 
 stickers = {
 
@@ -164,14 +178,14 @@ stickers = {
 
 
 # ==============================
-# ORDENAR STICKERS
+# ORDEM ALFABÉTICA
 # ==============================
 
 stickers_ordenados = sorted(stickers.keys())
 
 
 # ==============================
-# INICIALIZAR ESTADO
+# ESTADO DAS CHECKBOX
 # ==============================
 
 for item in stickers_ordenados:
@@ -183,7 +197,7 @@ for item in stickers_ordenados:
 
 
 # ==============================
-# BOTÕES
+# BOTÕES DE SELEÇÃO
 # ==============================
 
 col1, col2, col3, col4 = st.columns(4)
@@ -214,7 +228,7 @@ with col4:
 
 
 # ==============================
-# CHECKBOX GRID
+# GRID DE CHECKBOX
 # ==============================
 
 st.subheader("Escolha os stickers")
@@ -268,6 +282,8 @@ dados = []
 for item in selecionados:
 
     resultado = obter_dados(stickers[item]["link"])
+
+    time.sleep(0.25)   # evita limite de requisições
 
     if resultado:
 
