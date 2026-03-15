@@ -16,7 +16,13 @@ st.title("CS2 Sticker Analyzer — Budapest 2025")
 # ==============================
 
 if st.button("🔄 Atualizar dados"):
+
     st.cache_data.clear()
+
+    for key in list(st.session_state.keys()):
+        if key.startswith("chk_"):
+            st.session_state[key] = False
+
     st.rerun()
 
 
@@ -196,10 +202,14 @@ selecionados = []
 
 for i, item in enumerate(stickers_ordenados):
 
+    chave = f"chk_{item}"
+
+    if chave not in st.session_state:
+        st.session_state[chave] = False
+
     with cols[i % 4]:
 
-        if st.checkbox(item):
-
+        if st.checkbox(item, key=chave):
             selecionados.append(item)
 
 
