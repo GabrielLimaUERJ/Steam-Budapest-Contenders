@@ -165,14 +165,22 @@ stickers = {
 
 
 # ==============================
-# SELEÇÃO DE STICKERS
+# CHECKBOX GRID
 # ==============================
 
-selecionados = st.multiselect(
-    "Escolha os stickers",
-    options=list(stickers.keys()),
-    max_selections=34
-)
+st.subheader("Escolha os stickers")
+
+selecionados = []
+
+cols = st.columns(4)
+
+for i, item in enumerate(stickers):
+
+    with cols[i % 4]:
+
+        if st.checkbox(item):
+
+            selecionados.append(item)
 
 
 # ==============================
