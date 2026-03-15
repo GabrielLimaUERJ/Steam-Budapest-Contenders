@@ -43,13 +43,9 @@ def pegar_preco(link, currency=1):
     except:
         return None
 
-    preco_atual = data.get("lowest_price", "0")
-    preco_mediano = data.get("median_price", "0")
-    volume = data.get("volume", "0")
-
     return {
         "item": nome_item,
-        "lowest_price": preco_atual,
-        "median_price": preco_mediano,
-        "volume": volume
+        "lowest_price": data.get("lowest_price"),
+        "median_price": data.get("median_price"),
+        "volume": data.get("volume")
     }
