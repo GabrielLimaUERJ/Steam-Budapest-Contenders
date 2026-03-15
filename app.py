@@ -46,20 +46,19 @@ def obter_dados(link):
     if not dados:
         return None
 
-    preco_atual = limpar_preco(dados["lowest_price"])
-    preco_mediano = limpar_preco(dados["median_price"])
+    preco_atual = limpar_preco(dados.get("lowest_price"))
+    preco_mediano = limpar_preco(dados.get("median_price"))
 
-    if preco_atual is None or preco_mediano is None:
+    if preco_atual is None:
         return None
+
+    if preco_mediano is None:
+        preco_mediano = preco_atual
 
     variacao = ((preco_atual - preco_mediano) / preco_mediano) * 100
 
     return preco_atual, preco_mediano, variacao
 
-
-# ==============================
-# LISTA DE STICKERS
-# ==============================
 
 stickers = {
 
@@ -165,24 +164,75 @@ stickers = {
 
 
 # ==============================
+# ORDENAR STICKERS
+# ==============================
+
+stickers_ordenados = sorted(stickers.keys())
+
+
+# ==============================
+# INICIALIZAR ESTADO
+# ==============================
+
+for item in stickers_ordenados:
+
+    chave = f"chk_{item}"
+
+    if chave not in st.session_state:
+        st.session_state[chave] = False
+
+
+# ==============================
+# BOTÕES
+# ==============================
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    if st.button("Selecionar TODOS"):
+        for item in stickers_ordenados:
+            st.session_state[f"chk_{item}"] = True
+        st.rerun()
+
+with col2:
+    if st.button("Limpar seleção"):
+        for item in stickers_ordenados:
+            st.session_state[f"chk_{item}"] = False
+        st.rerun()
+
+with col3:
+    if st.button("Selecionar HOLO"):
+        for item in stickers_ordenados:
+            st.session_state[f"chk_{item}"] = "holo" in item.lower()
+        st.rerun()
+
+with col4:
+    if st.button("Selecionar GOLD"):
+        for item in stickers_ordenados:
+            st.session_state[f"chk_{item}"] = "gold" in item.lower()
+        st.rerun()
+
+
+# ==============================
 # CHECKBOX GRID
 # ==============================
 
 st.subheader("Escolha os stickers")
 
-selecionados = []
-
 cols = st.columns(4)
 
-stickers_ordenados = sorted(stickers.keys())
+selecionados = []
 
 for i, item in enumerate(stickers_ordenados):
 
+    chave = f"chk_{item}"
+
     with cols[i % 4]:
 
-        if st.checkbox(item):
+        if st.checkbox(item, key=chave):
 
             selecionados.append(item)
+
 
 # ==============================
 # MOSTRAR IMAGENS
