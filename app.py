@@ -1,3 +1,7 @@
+# ==============================
+# IMPORTS
+# ==============================
+
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -5,6 +9,11 @@ import re
 import time
 
 from steam_market_api import pegar_preco
+
+
+# ==============================
+# CONFIGURAÇÃO DA PÁGINA
+# ==============================
 
 st.set_page_config(page_title="CS2 Sticker Analyzer", layout="wide")
 
@@ -16,7 +25,6 @@ st.title("CS2 Sticker Analyzer — Budapest 2025")
 # ==============================
 
 if st.button("🔄 Atualizar dados"):
-
     st.cache_data.clear()
 
     for key in list(st.session_state.keys()):
@@ -27,7 +35,7 @@ if st.button("🔄 Atualizar dados"):
 
 
 # ==============================
-# LIMPAR PREÇO
+# FUNÇÃO: LIMPAR PREÇO
 # ==============================
 
 def limpar_preco(preco):
@@ -51,7 +59,7 @@ def limpar_preco(preco):
 
 
 # ==============================
-# CACHE
+# CACHE DE CONSULTA
 # ==============================
 
 @st.cache_data(ttl=120)
@@ -77,7 +85,7 @@ def obter_dados(link):
 
 
 # ==============================
-# LISTA DE STICKERS (EXEMPLO)
+# DICIONÁRIO DE STICKERS
 # ==============================
 
 stickers = {
@@ -94,7 +102,7 @@ stickers = {
 
 "Sticker | FaZe Clan (Gold) | Budapest 2025":{
 "link":"https://steamcommunity.com/market/listings/730/Sticker%20%7C%20FaZe%20Clan%20%28Gold%29%20%7C%20Budapest%202025",
-"img":"https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMi0MSnHtwM68obu72bgThH10MbkpCYKvqr2OPM9dfHED2bIw7gm5bdoTXrjl0twtT-AnNerInKVZgI-SswnU7w2rh4/330x192?allow_animated=1"
+"img":"https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGJai0ki7VeTHjMi0MSnHtwM68obu72bgThH10MbkpCYKvqr2OPM9dfHED2bIw7gm5bZtHn61zB9ysmiBn4z8dy_EOg8-SswnGkq6UaI/330x192?allow_animated=1"
 },
 
 "Sticker | FaZe Clan (Holo) | Budapest 2025":{
@@ -184,7 +192,7 @@ stickers = {
 
 
 # ==============================
-# ORDEM ALFABÉTICA
+# ORDENAÇÃO
 # ==============================
 
 stickers_ordenados = sorted(stickers.keys())
@@ -258,12 +266,12 @@ for item in selecionados:
             "Item": item,
             "Preço Atual": preco_atual,
             "Preço Mediano 24h": preco_mediano,
-            "Variação %": round(variacao,2)
+            "Variação %": round(variacao, 2)
         })
 
 
 # ==============================
-# TABELA + GRÁFICO
+# TABELA + GRÁFICO (DARK MODE)
 # ==============================
 
 if dados:
@@ -271,21 +279,36 @@ if dados:
     df = pd.DataFrame(dados)
 
     st.subheader("Tabela de análise")
-
     st.dataframe(df)
 
     st.subheader("Variação percentual")
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10, 5))
 
-    cores = ["green" if x > 0 else "red" for x in df["Variação %"]]
+    # 🔥 fundo transparente
+    fig.patch.set_alpha(0)
+    ax.set_facecolor("none")
+
+    cores = ["#00c853" if x > 0 else "#ff5252" for x in df["Variação %"]]
 
     ax.bar(df["Item"], df["Variação %"], color=cores)
 
-    ax.axhline(0)
+    ax.axhline(0, linewidth=1, alpha=0.6)
 
     ax.set_ylabel("Variação (%)")
+    ax.set_title("Variação percentual em relação ao preço mediano")
 
     plt.xticks(rotation=90)
+
+    # 🔥 melhorar visual no dark
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    # deixa os textos mais suaves
+    ax.tick_params(colors="#cccccc")
+    ax.yaxis.label.set_color("#cccccc")
+    ax.title.set_color("#ffffff")
+
+    plt.tight_layout()
 
     st.pyplot(fig)
