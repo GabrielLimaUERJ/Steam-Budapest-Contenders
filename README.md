@@ -52,3 +52,5 @@ Permitir a análise rápida de stickers do Steam Market, possibilitando:
 ```bash
 git clone https://github.com/GabrielLimaUERJ/Steam-Budapest-Contenders.git
 cd Steam-Budapest-Contenders
+pip install -r requirements.txt
+streamlit run app.py
